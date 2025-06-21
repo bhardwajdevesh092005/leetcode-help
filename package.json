@@ -9,9 +9,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onView:leetcodeSidebarView",
-    "onCommand:leetcode-help.helloWorld"
+  "activationEvents": ["onView:leetcode_problem_list"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -33,7 +31,8 @@
     "views": {
       "leetcodeSidebar": [
         {
-          "id": "leetcodeSidebarView",
+          "type": "webview",
+          "id": "leetcode_problem_list",
           "name": "LeetCode Tools"
         }
       ]
