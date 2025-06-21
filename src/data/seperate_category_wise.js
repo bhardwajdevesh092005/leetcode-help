@@ -1,13 +1,13 @@
 import axios from 'axios';
 import fs from 'fs';
-import mongoose from 'mongoose';
+// import mongoose from 'mongoose';
 
 // MongoDB connection URI (change it according to your setup)
-const MONGO_URI = 'mongodb://localhost:27017/leetcode_db';
-
-const allProblems = JSON.parse(fs.readFileSync('leetcode_problems.json', 'utf8'));
+// const MONGO_URI = 'mongodb://localhost:27017/leetcode_db';
+import {problemList} from './leetcode_problems.ts';
+// const allProblems = JSON.parse(fs.readFileSync('leetcode_problems.json', 'utf8'));
 const url = 'https://leetcode.com/graphql';
-
+const allProblems = problemList;
 // GraphQL query to get topic tags for a question
 const questionDetailQuery = `
   query getQuestionDetail($titleSlug: String!) {
@@ -21,37 +21,37 @@ const questionDetailQuery = `
       difficulty
       questionId
       acRate
-      paidOnly
+      isPaidOnly
     }
   }
 `;
 
 // Connect to MongoDB
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log('Connected to MongoDB'))
+//   .catch(err => console.error('MongoDB connection error:', err));
 
 // Define MongoDB schema
-const questionSchema = new mongoose.Schema({
-  questionId: String,
-  title: String,
-  titleSlug: String,
-  difficulty: String,
-  acRate: Number,
-  paidOnly: Boolean
-}, { _id: false });
+// const questionSchema = new mongoose.Schema({
+//   questionId: String,
+//   title: String,
+//   titleSlug: String,
+//   difficulty: String,
+//   acRate: Number,
+//   paidOnly: Boolean
+// }, { _id: false });
 
-const categorySchema = new mongoose.Schema({
-  category: String,
-  questions: [questionSchema]
-});
+// const categorySchema = new mongoose.Schema({
+//   category: String,
+//   questions: [questionSchema]
+// });
 
-const Category = mongoose.model('Category', categorySchema);
+// const Category = mongoose.model('Category', categorySchema);
 
 async function fetchCategoriesForProblems(problems) {
   const categoryMap = {};
 
-  for (let i = 0; i < problems.length; i++) {
+  for (let i = 0; i < 100; i++) {
     const problem = problems[i];
     try {
       const res = await axios.post(
@@ -88,22 +88,26 @@ async function fetchCategoriesForProblems(problems) {
         });
       }
       await new Promise(r => setTimeout(r, 300));
+      console.log(`Fetched ${q.title} (${q.titleSlug}) with ${q.topicTags.length} tags`);
+      console.log(`Current category count: ${Object.keys(categoryMap).length}`);
+      console.log('percentage completed:', ((i + 1) / problems.length * 100).toFixed(2) + '%');
     } catch (err) {
       console.error(`Error fetching ${problem.titleSlug}`, err.response?.data || err.message);
     }
   }
-
+  fs.writeFileSync('category_wise_questions.json', JSON.stringify(categoryMap, null,2));
+  console.log('Category-wise questions saved to category_wise_questions.json');
   // Save to MongoDB
-  for (const [category, questions] of Object.entries(categoryMap)) {
-    await Category.findOneAndUpdate(
-      { category },
-      { category, questions },
-      { upsert: true, new: true }
-    );
-  }
+  // for (const [category, questions] of Object.entries(categoryMap)) {
+  //   await Category.findOneAndUpdate(
+  //     { category },
+  //     { category, questions },
+  //     { upsert: true, new: true }
+  //   );
+  // }
 
-  console.log('All categories and questions saved to MongoDB');
-  mongoose.disconnect();
+  // console.log('All categories and questions saved to MongoDB');
+  // mongoose.disconnect();
 }
 
 fetchCategoriesForProblems(allProblems);

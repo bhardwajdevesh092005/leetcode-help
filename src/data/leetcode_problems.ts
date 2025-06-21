@@ -1,4 +1,11 @@
-[
+export const problemList:{
+  questionId: string;
+  title: string;
+  titleSlug: string;
+  difficulty: string;
+  acRate: number;
+  isPaidOnly: boolean;
+}[] = [
   {
     "questionId": "1",
     "title": "Two Sum",
@@ -28687,4 +28694,4 @@
     "acRate": 39.266706091070375,
     "isPaidOnly": false
   }
-]
+];
