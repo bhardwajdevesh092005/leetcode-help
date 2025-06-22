@@ -5,7 +5,6 @@ import {
   Uri,
   EventEmitter,
   window,
-  TextEditor,
   workspace,
   commands,
 } from "vscode";
@@ -187,9 +186,25 @@ export class LeftPanelWebview implements WebviewViewProvider {
       />
       Problem List
     </h1>
-
+    <input
+      type="text"
+      id="searchBar"
+      placeholder="Search problems..."
+      style="
+        width: 80%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    /* Optional dark theme support */
+        background-color: #1e1e1e;
+        color: white;
+      "
+    />
     <div id="container"></div>
     <script src="${dataUri}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     <script nonce="" src="${scriptUri}"></script>
   </body>
 </html>

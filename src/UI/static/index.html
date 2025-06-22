@@ -4,11 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 1rem;
+        background-color: rgb(19, 19, 19);
+      }
+
+      h3 {
+        margin-top: 0.5rem;
+        cursor: pointer;
+        background-color: #4caf50;
+        color: white;
+        padding: 5px;
+        border-radius: 6px;
+      }
+
+      .category,
+      .problem {
+        margin: 10px 0;
+      }
+
+      .problems,
+      .parse-btn-wrapper {
+        display: none;
+        padding-left: 20px;
+      }
+
+      .problem-title {
+        cursor: pointer;
+        background-color: #171717;
+        padding: 8px;
+        border-radius: 6px;
+        margin: 5px 0;
+      }
+
+      .parse-btn {
+        margin-top: 5px;
+        padding: 6px 12px;
+        background-color: #2196f3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .parse-btn:hover {
+        background-color: #1976d2;
+      }
+    </style>
 </head>
 <body>
+    <input
+      type="text"
+      id="searchBar"
+      placeholder="Search problems..."
+      style="
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        background-color: #1e1e1e;
+        color: white;
+      "
+    />
     <div id="container"></div>
     <script src="../../data/category_wise_questions.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script> -->
     <script src="./script.js"></script>
 </body>
 </html>
