@@ -1,14 +1,10 @@
 import axios from 'axios';
 import fs from 'fs';
-// import mongoose from 'mongoose';
+import { problemList } from './leetcode_problems.ts';
 
-// MongoDB connection URI (change it according to your setup)
-// const MONGO_URI = 'mongodb://localhost:27017/leetcode_db';
-import {problemList} from './leetcode_problems.ts';
-// const allProblems = JSON.parse(fs.readFileSync('leetcode_problems.json', 'utf8'));
 const url = 'https://leetcode.com/graphql';
 const allProblems = problemList;
-// GraphQL query to get topic tags for a question
+
 const questionDetailQuery = `
   query getQuestionDetail($titleSlug: String!) {
     question(titleSlug: $titleSlug) {
@@ -26,88 +22,71 @@ const questionDetailQuery = `
   }
 `;
 
-// Connect to MongoDB
-// mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-//   .then(() => console.log('Connected to MongoDB'))
-//   .catch(err => console.error('MongoDB connection error:', err));
+const BATCH_SIZE = 20;         // number of requests in parallel
+const BATCH_DELAY_MS = 100;   // delay between batches
 
-// Define MongoDB schema
-// const questionSchema = new mongoose.Schema({
-//   questionId: String,
-//   title: String,
-//   titleSlug: String,
-//   difficulty: String,
-//   acRate: Number,
-//   paidOnly: Boolean
-// }, { _id: false });
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-// const categorySchema = new mongoose.Schema({
-//   category: String,
-//   questions: [questionSchema]
-// });
-
-// const Category = mongoose.model('Category', categorySchema);
+async function fetchQuestionDetail(titleSlug) {
+  try {
+    const res = await axios.post(
+      url,
+      {
+        query: questionDetailQuery,
+        variables: { titleSlug }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Referer': `https://leetcode.com/problems/${titleSlug}`,
+          'User-Agent': 'Mozilla/5.0'
+        }
+      }
+    );
+    return res.data.data.question;
+  } catch (err) {
+    console.error(`Error fetching ${titleSlug}:`, err.response?.data || err.message);
+    return null;
+  }
+}
 
 async function fetchCategoriesForProblems(problems) {
   const categoryMap = {};
 
-  for (let i = 0; i < 100; i++) {
-    const problem = problems[i];
-    try {
-      const res = await axios.post(
-        url,
-        {
-          query: questionDetailQuery,
-          variables: { titleSlug: problem.titleSlug }
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Referer': `https://leetcode.com/problems/${problem.titleSlug}`,
-            'User-Agent': 'Mozilla/5.0'
-          }
-        }
-      );
+  for (let i = 0; i < problems.length; i += BATCH_SIZE) {
+    const batch = problems.slice(i, i + BATCH_SIZE);
 
-      const q = res.data.data.question;
-      if (!q) {continue;}
+    const results = await Promise.all(
+      batch.map(p => fetchQuestionDetail(p.titleSlug))
+    );
 
+    results.forEach(q => {
+      if (!q) {return;}
       for (const tag of q.topicTags) {
         const category = tag.name;
         if (!categoryMap[category]) {
           categoryMap[category] = [];
         }
-        // Avoid duplicates if same question appears in multiple categories
         categoryMap[category].push({
           questionId: q.questionId,
           title: q.title,
           titleSlug: q.titleSlug,
           difficulty: q.difficulty,
           acRate: q.acRate,
-          paidOnly: q.paidOnly
+          paidOnly: q.isPaidOnly
         });
       }
-      await new Promise(r => setTimeout(r, 300));
-      console.log(`Fetched ${q.title} (${q.titleSlug}) with ${q.topicTags.length} tags`);
-      console.log(`Current category count: ${Object.keys(categoryMap).length}`);
-      console.log('percentage completed:', ((i + 1) / problems.length * 100).toFixed(2) + '%');
-    } catch (err) {
-      console.error(`Error fetching ${problem.titleSlug}`, err.response?.data || err.message);
-    }
-  }
-  fs.writeFileSync('category_wise_questions.json', JSON.stringify(categoryMap, null,2));
-  console.log('Category-wise questions saved to category_wise_questions.json');
-  // Save to MongoDB
-  // for (const [category, questions] of Object.entries(categoryMap)) {
-  //   await Category.findOneAndUpdate(
-  //     { category },
-  //     { category, questions },
-  //     { upsert: true, new: true }
-  //   );
-  // }
+      console.log(`Fetched: ${q.title}`);
+    });
 
-  // console.log('All categories and questions saved to MongoDB');
-  // mongoose.disconnect();
+    console.log(`Completed ${Math.min(i + BATCH_SIZE, problems.length)} / ${problems.length}`);
+    await sleep(BATCH_DELAY_MS);
+  }
+
+  fs.writeFileSync('category_wise_questions.json', JSON.stringify(categoryMap, null, 2));
+  console.log('Saved to category_wise_questions.json');
 }
 
 fetchCategoriesForProblems(allProblems);

@@ -1,4 +1,5 @@
 // const {data} =  require('../../data/category_wise_questions');
+const vscode = acquireVsCodeApi();
 const container = document.getElementById('container');
 Object.entries(data).forEach(([category, problems]) => {
     // Category Header
@@ -30,7 +31,16 @@ Object.entries(data).forEach(([category, problems]) => {
     const btn = document.createElement('button');
     btn.className = 'parse-btn';
     btn.textContent = 'Parse Question';
-
+    btn.addEventListener('click',()=>{
+        const message = {
+            action: 'PARSE_QUESTION',
+            data: {
+                title: problem.title,
+                slug: problem.titleSlug, // Assuming you have slug in the `problem` object
+            },
+        };
+        vscode.postMessage(message);
+    });
     btnWrapper.appendChild(btn);
 
     probTitle.onclick = () => {

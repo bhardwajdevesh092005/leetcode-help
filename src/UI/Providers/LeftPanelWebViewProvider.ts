@@ -5,7 +5,11 @@ import {
   Uri,
   EventEmitter,
   window,
+  TextEditor,
+  workspace,
+  commands,
 } from "vscode";
+import path from "path";
 import * as fs from "fs";
 // import { Utils } from "utils";
 
@@ -37,11 +41,67 @@ export class LeftPanelWebview implements WebviewViewProvider {
     this.activateMessageListener();
   }
 
+  private async parseQuestionAndWrieToFile({ title, slug }: { title: string, slug: string }) {
+    try{
+      const language = await window.showQuickPick(['C++', 'Java', 'Python'], {
+        placeHolder: 'Select a language to parse the question',
+      });
+
+      if (!language) {
+        window.showWarningMessage('No language selected');
+        return;
+      } 
+
+      const quesApiUri = 'http://localhost:3000/questions/' + slug + '/getCode/' + language;
+
+      const res = await fetch(quesApiUri);
+      if (!res.ok) {
+        console.log(`HTTP error! status: ${res.status}`);
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data:any = await res.json();
+      console.log(data);
+      const workspaceFolder = workspace.workspaceFolders?.[0];
+      if (!workspaceFolder) {
+        window.showErrorMessage("No workspace folder found.");
+        return;
+      }
+
+      const extMap: Record<string, string> = {
+        "JavaScript": "js",
+        "TypeScript": "ts",
+        "Python": "py",
+        "Java": "java",
+        "C++": "cpp",
+      };
+      const extension = extMap[language] || "txt";
+      const fileName = `${slug}.${extension}`;
+      const filePath = path.join(workspaceFolder.uri.fsPath, fileName);
+      const inputFileName = "input.txt";
+      const inputFilePath = path.join(workspaceFolder.uri.fsPath, inputFileName);
+      fs.writeFileSync(filePath, data.code, "utf8");
+      fs.writeFileSync(inputFilePath, data.input, "utf8");
+      const fileUri = Uri.file(filePath);
+      const doc = await workspace.openTextDocument(fileUri);
+      await window.showTextDocument(doc);
+
+      window.showInformationMessage(`Parsed "${title}" in ${language}.`);
+    }catch (error) {
+      console.error(error);
+      window.showErrorMessage("Failed to fetch or write the question data.");
+    }
+  }
+
+
   private activateMessageListener() {
-    this._view.webview.onDidReceiveMessage((message: any) => {
+    this._view.webview.onDidReceiveMessage(async (message: any) => {
       switch (message.action) {
         case "SHOW_WARNING_LOG":
           window.showWarningMessage(message.data.message);
+          break;
+        case 'PARSE_QUESTION':
+          await this.parseQuestionAndWrieToFile(message.data);
           break;
         default:
           break;
@@ -133,7 +193,6 @@ export class LeftPanelWebview implements WebviewViewProvider {
     <script nonce="" src="${scriptUri}"></script>
   </body>
 </html>
-
 `;
   }
 }
