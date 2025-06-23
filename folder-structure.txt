@@ -1,0 +1,45 @@
+/home/devesh-bhardwaj/Desktop/LeetCode-Help/leetcode-help
+├── .gitignore
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── dist
+│   ├── extension.js
+│   ├── extension.js.map
+│   └── static
+│       ├── category_wise_questions.js
+│       └── index.html
+├── esbuild.js
+├── eslint.config.mjs
+├── folder-structure.txt
+├── folder_st.js
+├── media
+│   └── icon.png
+├── package-lock.json
+├── package.json
+├── src
+│   ├── UI
+│   │   ├── Providers
+│   │   │   └── LeftPanelWebViewProvider.ts
+│   │   ├── Utils
+│   │   │   ├── Nonce.ts
+│   │   │   └── extractCode.ts
+│   │   └── static
+│   │       ├── index.html
+│   │       └── script.js
+│   ├── data
+│   │   ├── QuestionListScraper.js
+│   │   ├── category_wise_questions.js
+│   │   ├── leetcode_problems.ts
+│   │   └── seperate_category_wise.js
+│   ├── extension.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── vsc-extension-quickstart.md

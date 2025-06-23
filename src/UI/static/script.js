@@ -15,13 +15,11 @@ Object.entries(data).forEach(([category, problems]) => {
   });
 });
 
-// Initialize Fuse.js
 fuse = new Fuse(flatProblems, {
   keys: ['title'],
-  threshold: 0.9, // Lower is stricter, higher is fuzzier
+  threshold: 0.9, 
 });
 
-// Debounce utility function
 function debounce(func, delay) {
   let timeout;
   return (...args) => {
@@ -30,12 +28,11 @@ function debounce(func, delay) {
   };
 }
 
-// Render function
 function renderProblems(filteredData) {
   container.innerHTML = '';
 
   Object.entries(filteredData).forEach(([category, problems]) => {
-    if (problems.length === 0) return;
+    if (problems.length === 0) {return;}
 
     const catDiv = document.createElement('div');
     catDiv.className = 'category';
@@ -91,18 +88,16 @@ function renderProblems(filteredData) {
   });
 }
 
-// Group filtered results by category
 function groupByCategory(results) {
   const grouped = {};
   results.forEach(({ item }) => {
     const category = item.category;
-    if (!grouped[category]) grouped[category] = [];
+    if (!grouped[category]) {grouped[category] = [];}
     grouped[category].push(item);
   });
   return grouped;
 }
 
-// Search Handler with debounce and fuzzy match
 const handleSearch = debounce(() => {
   const query = searchBar.value.trim();
 
@@ -114,9 +109,18 @@ const handleSearch = debounce(() => {
   const results = fuse.search(query);
   const grouped = groupByCategory(results);
   renderProblems(grouped);
-}, 200); // 200ms debounce delay
+}, 200); 
 
 searchBar.addEventListener('input', handleSearch);
+document.getElementById('run_btn').addEventListener('click', () => {
+  vscode.postMessage({
+    action: 'RUN_CODE',
+  }); 
+});
+document.getElementById('submit').addEventListener('click', () => {
+  vscode.postMessage({
+    action: 'SUBMIT_CODE',
+  }); 
+});
 
-// Initial render
 renderProblems(data);
